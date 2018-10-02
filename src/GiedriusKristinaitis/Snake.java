@@ -16,16 +16,27 @@ public class Snake {
     private boolean canTurnVertical = true;
     private boolean canTurnHorizontal = false;
 
+    // body color
+    private final Color bodyColor;
+
     /**
-     * Default class constructor
+     * Class constructor
+     * @param headColor color of the snake's head
+     * @param bodyColor color of the snake's body
+     * @param start_x starting x coordinate of the snake
+     * @param start_y starting y coordinate of the snake
+     * @param speed_x starting x speed of the snake
+     * @param speed_y starting y speed of the snake
      */
-    public Snake(){
-        x_speed = 1;
-        y_speed = 0;
+    public Snake(Color headColor, Color bodyColor, int start_x, int start_y, int speed_x, int speed_y){
+        x_speed = speed_x;
+        y_speed = speed_y;
 
         // initialize the head cell
-        SnakeCell head = new SnakeCell(0, 0, Color.GREEN);
+        SnakeCell head = new SnakeCell(start_x, start_y, headColor);
         cells.add(head);
+
+        this.bodyColor = bodyColor;
     }
 
 
@@ -112,7 +123,7 @@ public class Snake {
      * Adds a new cell to the snake, called every time the snake eats food
      */
     public void grow(){
-        SnakeCell cell = new SnakeCell(Color.ORANGE);
+        SnakeCell cell = new SnakeCell(bodyColor);
         SnakeCell lastCell = cells.get(cells.size() - 1);
 
         cell.setX(lastCell.getPreviousX());
@@ -183,6 +194,15 @@ public class Snake {
 
 
     /**
+     * Gets all the cells of the snake
+     * @return list with all cells
+     */
+    public List<SnakeCell> getCells(){
+        return cells;
+    }
+
+
+    /**
      * Checks if there is a snake cell at the specified position
      * @param x x coordinate of the cell
      * @param y y coordinate of the cell
@@ -202,4 +222,6 @@ public class Snake {
     // ******** GETTERS ******** //
     public int getHeadX() { return cells.get(0).getX(); }
     public int getHeadY() { return cells.get(0).getY(); }
+    public int getXSpeed() { return x_speed; }
+    public int getYSpeed() { return y_speed; }
 }

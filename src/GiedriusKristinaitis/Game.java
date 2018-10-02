@@ -18,7 +18,7 @@ public class Game extends ScreenKTU implements FocusListener {
     private static final int CELL_DIMENSIONS = 25;
     public static final int SCREEN_WIDTH = 25;
     public static final int SCREEN_HEIGHT = 26;
-    private static final long GAME_UPDATE_INTERVAL = 100;
+    private static final long GAME_UPDATE_INTERVAL = 25;
 
     // button information
     private static final String BUTTON_TEXT = "PLAY";
@@ -33,9 +33,11 @@ public class Game extends ScreenKTU implements FocusListener {
     private boolean gamePaused = false;
 
     // game objects
-    private Snake snake;
+    private Snake snake;    // snake controlled by the player
+    private Snake botSnake; // snake controlled by the computer
     private Cell food;
     private Cell[] obstacles;
+    private Bot bot;
 
     // other required objects
     private final Random random = new Random();
@@ -86,9 +88,12 @@ public class Game extends ScreenKTU implements FocusListener {
      */
     @Override
     public void run(){
-        snake = new Snake();
+        snake = new Snake(Color.GREEN, Color.ORANGE, 0, 0, 1, 0);
+        botSnake = new Snake(Color.CYAN, Color.GRAY, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 2, -1, 0);
+        bot = new Bot(SCREEN_WIDTH, SCREEN_HEIGHT - 1, botSnake);
 
         initializeObstacles();
+        bot.initializeGrid(obstacles);
 
         generateFood(Color.BLUE);
 
@@ -163,7 +168,8 @@ public class Game extends ScreenKTU implements FocusListener {
         setFontColor(Color.WHITE);
         print(SCREEN_HEIGHT - 1, 0, "Score: " + score);
 
-        // draw the snake and food
+        // draw the snakes and food
+        botSnake.draw(this);
         snake.draw(this);
         food.draw(this);
 
@@ -180,8 +186,6 @@ public class Game extends ScreenKTU implements FocusListener {
      * Updates the game state
      */
     private void update(){
-        snake.update(this);
-
         // check if the snake has eaten the food
         if(snake.getHeadX() == food.getX() && snake.getHeadY() == food.getY()){
             snake.grow();
@@ -196,10 +200,25 @@ public class Game extends ScreenKTU implements FocusListener {
                 foodTillSpecial--;
                 generateFood(Color.BLUE);
             }
+
+            bot.updateGrid(snake);
+            bot.findPathToFood(obstacles, snake, food);
+        }else if(botSnake.getHeadX() == food.getX() && botSnake.getHeadY() == food.getY()){
+            botSnake.grow();
+            generateFood(Color.MAGENTA);
+            bot.updateGrid(snake);
+            bot.findPathToFood(obstacles, snake, food);
         }
+
+        // update the snake
+        snake.update(this);
 
         // check for collisions
         checkForCollisions();
+
+        // update the bot
+        botSnake.update(this);
+        bot.update(obstacles, snake, food);
     }
 
 
@@ -214,7 +233,7 @@ public class Game extends ScreenKTU implements FocusListener {
             }
         }
 
-        if(snake.isTryingToEatItself()){
+        if(snake.isTryingToEatItself() || botSnake.hasCellAt(snake.getHeadX(), snake.getHeadY())){
             stopGame();
         }
     }
@@ -230,7 +249,8 @@ public class Game extends ScreenKTU implements FocusListener {
             int food_x = random.nextInt(SCREEN_WIDTH);
             int food_y = random.nextInt(SCREEN_HEIGHT - 1);
 
-            if(!snake.hasCellAt(food_x, food_y) && !obstacleExists(food_x, food_y)){
+            if(!snake.hasCellAt(food_x, food_y) && !obstacleExists(food_x, food_y)
+                && !botSnake.hasCellAt(food_x, food_y)){
                 food.setX(food_x);
                 food.setY(food_y);
 
