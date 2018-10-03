@@ -219,6 +219,15 @@ public class Snake {
     }
 
 
+    /**
+     * Makes the snake able to turn any direction
+     */
+    public void makeAbleToTurn(){
+        canTurnHorizontal = true;
+        canTurnVertical = true;
+    }
+
+
     // ******** GETTERS ******** //
     public int getHeadX() { return cells.get(0).getX(); }
     public int getHeadY() { return cells.get(0).getY(); }

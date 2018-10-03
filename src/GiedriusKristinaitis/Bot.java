@@ -9,7 +9,7 @@ public class Bot {
     private static final int GAME_OBJECT_OBSTACLE = -1;
 
     // bot's snake
-    private final Snake snake;
+    private Snake snake;
 
     // game grid variables
     private final int[][] grid;
@@ -75,11 +75,16 @@ public class Bot {
      * Updates the path to the food
      */
     private void updatePath(Cell[] obstacles, Snake player, Cell food){
-        if(path.size() == 0){
-            findPathToFood(obstacles, player, food);
-        }else{
-            if(grid[path.get(0).getX()][path.get(0).getY()] == GAME_OBJECT_OBSTACLE){
-                findPathToFood(obstacles, player, food);
+        if(path.size() > 0){
+            for(int x = 0; x < gridWidth; x++){
+                for(int y = 0; y < gridHeight; y++){
+                    for(Point point: path){
+                        if(point.getX() == x && point.getY() == y && grid[x][y] == GAME_OBJECT_OBSTACLE && !snake.hasCellAt(x, y)){
+                            findPathToFood(obstacles, player, food);
+                            break;
+                        }
+                    }
+                }
             }
         }
     }
@@ -109,16 +114,54 @@ public class Bot {
         moveToPoints(points, newPoints, 0, food);
 
         // find shortest path
-        int x = snake.getHeadX() + snake.getXSpeed();
-        int y = snake.getHeadY() + snake.getYSpeed();
+        Point closest = getClosestPoint(snake.getHeadX(), snake.getHeadY());
+        processPoint(closest.getX(), closest.getY());
 
-        if(x < 0){ x = gridWidth - 1; }
-        if(x >= gridWidth) { x = 0; }
-        if(y < 0){ y = gridHeight - 1; }
-        if(y >= gridHeight) { y = 0; }
-
-        processPoint(x, y);
         return;
+    }
+
+
+    /**
+     * Gets the point that leads to the shortest path to the food from the specified point
+     * @param x x coordinate of the specified point
+     * @param y y coordinate of the specified point
+     * @return point leading to the shortest path
+     */
+    private Point getClosestPoint(int x, int y){
+        Point closest = new Point(x, y);
+
+        int distanceLeft = 100000;
+        int distanceRight = 100000;
+        int distanceUp = 100000;
+        int distanceDown = 100000;
+
+        // check right point
+        if((x + 1 >= 0 && x + 1 < gridWidth) && (y >= 0 && y < gridHeight) && grid[x + 1][y] != GAME_OBJECT_OBSTACLE){ distanceRight = grid[x + 1][y]; }
+        // check left point
+        if((x - 1 >= 0 && x - 1 < gridWidth) && (y >= 0 && y < gridHeight) && grid[x - 1][y] != GAME_OBJECT_OBSTACLE){ distanceLeft = grid[x - 1][y]; }
+        // check bottom point
+        if((x >= 0 && x < gridWidth) && (y + 1 >= 0 && y + 1 < gridHeight) && grid[x][y + 1] != GAME_OBJECT_OBSTACLE){ distanceDown = grid[x][y + 1]; }
+        // check top point
+        if((x >= 0 && x < gridWidth) && (y - 1 >= 0 && y - 1 < gridHeight) && grid[x][y - 1] != GAME_OBJECT_OBSTACLE){ distanceUp = grid[x][y - 1]; }
+
+        // check right distance
+        if(distanceRight <= distanceLeft && distanceRight <= distanceUp && distanceRight <= distanceDown){
+            closest.setX(x + 1); closest.setY(y);
+        }
+        // check left distance
+        else if(distanceLeft <= distanceRight && distanceLeft <= distanceUp && distanceLeft <= distanceDown){
+            closest.setX(x - 1); closest.setY(y);
+        }
+        // check up distance
+        else if(distanceUp <= distanceLeft && distanceUp <= distanceRight && distanceUp <= distanceDown){
+            closest.setX(x); closest.setY(y - 1);
+        }
+        // check down distance
+        else if(distanceDown <= distanceLeft && distanceDown <= distanceUp && distanceDown <= distanceRight){
+            closest.setX(x); closest.setY(y + 1);
+        }
+
+        return closest;
     }
 
 
@@ -253,5 +296,12 @@ public class Bot {
                 path.remove(0);
             }
         }
+    }
+
+
+    // ******** SETTERS ******** //
+    public void setSnake(Snake snake){
+        this.snake = snake;
+        this.snake.makeAbleToTurn();
     }
 }

@@ -201,31 +201,65 @@ public class Game extends ScreenKTU implements FocusListener {
                 generateFood(Color.BLUE);
             }
 
-            bot.updateGrid(snake);
-            bot.findPathToFood(obstacles, snake, food);
         }else if(botSnake.getHeadX() == food.getX() && botSnake.getHeadY() == food.getY()){
             botSnake.grow();
             generateFood(Color.MAGENTA);
-            bot.updateGrid(snake);
-            bot.findPathToFood(obstacles, snake, food);
         }
 
         // update the snake
         snake.update(this);
 
-        // check for collisions
-        checkForCollisions();
+        // check for player collisions
+        checkForPlayerCollisions();
 
         // update the bot
-        botSnake.update(this);
         bot.update(obstacles, snake, food);
+        botSnake.update(this);
+
+        // check for bot collisions
+        checkForBotCollisions();
     }
 
 
     /**
-     * Checks for collisions
+     * Checks for bot collisions
      */
-    private void checkForCollisions(){
+    private void checkForBotCollisions(){
+        for(Cell cell: obstacles){
+            if(cell.getX() == botSnake.getHeadX() && cell.getY() == botSnake.getHeadY()){
+                respawnBot();
+                break;
+            }
+        }
+
+        if(botSnake.isTryingToEatItself() || snake.hasCellAt(botSnake.getHeadX(), botSnake.getHeadY())){
+            respawnBot();
+        }
+    }
+
+
+    /**
+     * Re-spawns the bot if it died
+     */
+    private void respawnBot(){
+        while(true){
+            int bot_x = random.nextInt(SCREEN_WIDTH);
+            int bot_y = random.nextInt(SCREEN_HEIGHT - 1);
+
+            if(!snake.hasCellAt(bot_x, bot_y) && !obstacleExists(bot_x, bot_y)){
+                botSnake = new Snake(Color.CYAN, Color.GRAY, bot_x, bot_y, 0, 0);
+                bot.setSnake(botSnake);
+                bot.findPathToFood(obstacles, snake, food);
+                break;
+            }
+        }
+    }
+
+
+    /**
+     * Checks for player collisions
+     */
+    private void checkForPlayerCollisions(){
         for(Cell cell: obstacles){
             if(cell.getX() == snake.getHeadX() && cell.getY() == snake.getHeadY()){
                 stopGame();
@@ -257,6 +291,8 @@ public class Game extends ScreenKTU implements FocusListener {
                 break;
             }
         }
+
+        bot.findPathToFood(obstacles, snake, food);
     }
 
 
