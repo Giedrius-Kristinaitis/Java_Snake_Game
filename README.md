@@ -1,2 +1,2 @@
 # Java_Snake_Game
-A simple snake game written in Java.
+A simple snake game with AI written in Java.
